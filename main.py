@@ -2,11 +2,6 @@ import pygame
 
 pygame.init()
 
-SCREEN_WD = 800
-SCREEN_HT = 600
-screen = pygame.display.set_mode((SCREEN_WD, SCREEN_HT))
-clock = pygame.time.Clock()
-
 
 class Environment:
     def __init__(self, width, height) -> None:
@@ -30,7 +25,7 @@ class Environment:
         self.bot_bor_surf.fill((255, 255, 255))
 
         # separator
-        self.separate_surf = pygame.Surface((10, 450))
+        self.separate_surf = pygame.Surface((5, 450))
         self.separate_rect = self.separate_surf.get_rect(
             center=(self.width / 2, self.height / 2)
         )
@@ -78,38 +73,62 @@ class Player:
         screen.blit(self.surf, self.rect)
 
 
-environment = Environment(SCREEN_WD, SCREEN_HT)
-l_player = Player(
-    20, SCREEN_HT / 2, 10, 100, environment.top_bor_rect, environment.bot_bor_rect
-)
-r_player = Player(
-    780, SCREEN_HT / 2, 10, 100, environment.top_bor_rect, environment.bot_bor_rect
-)
+class Game:
+    def __init__(self, width: int = 800, height: int = 600) -> None:
+        self.width = width
+        self.height = height
+        self.screen = pygame.display.set_mode((self.width, self.height))
+        self.clock = pygame.time.Clock()
 
-# set state
-run_state = True
+        # initialize game objects
+        self.environment = Environment(self.width, self.height)
+        self.l_player = Player(
+            20,
+            self.height / 2,
+            10,
+            100,
+            self.environment.top_bor_rect,
+            self.environment.bot_bor_rect,
+        )
+        self.r_player = Player(
+            780,
+            self.height / 2,
+            10,
+            100,
+            self.environment.top_bor_rect,
+            self.environment.bot_bor_rect,
+        )
 
-while run_state:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            run_state = False
+        # run state
+        self.is_running = True
 
-    keys = pygame.key.get_pressed()
+    def event_handler(self):
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                self.is_running = False
 
-    l_player.update(keys)
-    r_player.update(keys)
+    def update(self):
+        keys = pygame.key.get_pressed()
+        self.l_player.update(keys)
+        self.r_player.update(keys)
 
-    environment.draw(screen)
-    l_player.draw(screen)
-    r_player.draw(screen)
+    def draw(self):
+        self.environment.draw(self.screen)
+        self.l_player.draw(self.screen)
+        self.r_player.draw(self.screen)
+        pygame.display.update()
 
-    # screen.blit(bg_surf, bg_rect)
-    # screen.blit(top_bor_surf, top_bor_rect)
-    # screen.blit(bottom_bor_surf, bottom_bor_rect)
-    # screen.blit(center_line_surf, center_line_rect)
+    def run(self):
+        while self.is_running:
+            self.event_handler()
+            self.update()
+            self.draw()
 
-    # screen.blit(left_player_surf, left_player_rect)
-    # screen.blit(right_player_surf, right_player_rect)
+            self.clock.tick(60)
 
-    clock.tick(60)
-    pygame.display.update()
+        pygame.quit()
+
+
+if __name__ == "__main__":
+    game = Game()
+    game.run()
