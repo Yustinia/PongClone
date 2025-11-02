@@ -7,46 +7,55 @@ SCREEN_HT = 600
 screen = pygame.display.set_mode((SCREEN_WD, SCREEN_HT))
 clock = pygame.time.Clock()
 
-# set environment
-bg_surf = pygame.Surface((SCREEN_WD, SCREEN_HT))
-bg_rect = bg_surf.get_rect(center=(SCREEN_WD / 2, SCREEN_HT / 2))
-bg_surf.fill((25, 25, 25))
 
-top_bor_surf = pygame.Surface((SCREEN_WD, 50))
-top_bor_rect = top_bor_surf.get_rect(midtop=(SCREEN_WD / 2, 0))
-top_bor_surf.fill((255, 255, 255))
+class Environment:
+    def __init__(self, width, height) -> None:
+        # screen
+        self.width = width
+        self.height = height
 
-bottom_bor_surf = pygame.Surface((SCREEN_WD, 50))
-bottom_bor_rect = bottom_bor_surf.get_rect(midbottom=(SCREEN_WD / 2, 600))
-bottom_bor_surf.fill((255, 255, 255))
+        # background
+        self.bg_surf = pygame.Surface((self.width, self.height))
+        self.bg_rect = self.bg_surf.get_rect(center=(self.width / 2, self.height / 2))
+        self.bg_surf.fill((25, 25, 25))
 
-center_line_surf = pygame.Surface((10, 450))
-center_line_rect = center_line_surf.get_rect(center=(SCREEN_WD / 2, SCREEN_HT / 2))
-center_line_surf.fill((255, 255, 255))
+        # top border
+        self.top_bor_surf = pygame.Surface((self.width, 50))
+        self.top_bor_rect = self.top_bor_surf.get_rect(midtop=(self.width / 2, 0))
+        self.top_bor_surf.fill((255, 255, 255))
 
-# set players
-left_player_surf = pygame.Surface((10, 100))
-left_player_rect = left_player_surf.get_rect(midleft=(10, SCREEN_HT / 2))
-left_player_surf.fill((255, 255, 255))
+        # bottom border
+        self.bot_bor_surf = pygame.Surface((self.width, 50))
+        self.bot_bor_rect = self.bot_bor_surf.get_rect(midbottom=(self.width / 2, 600))
+        self.bot_bor_surf.fill((255, 255, 255))
 
-right_player_surf = pygame.Surface((10, 100))
-right_player_rect = right_player_surf.get_rect(midright=(790, SCREEN_HT / 2))
-right_player_surf.fill((255, 255, 255))
+        # separator
+        self.separate_surf = pygame.Surface((10, 450))
+        self.separate_rect = self.separate_surf.get_rect(
+            center=(self.width / 2, self.height / 2)
+        )
+        self.separate_surf.fill((255, 255, 255))
+
+    def draw(self, screen):
+        screen.blit(self.bg_surf, self.bg_rect)
+        screen.blit(self.top_bor_surf, self.top_bor_rect)
+        screen.blit(self.bot_bor_surf, self.bot_bor_rect)
+        screen.blit(self.separate_surf, self.separate_rect)
 
 
 class Player:
     def __init__(
-        self,
-        surface,
-        rect,
-        bordertop=top_bor_rect,
-        borderbottom=bottom_bor_rect,
-        speed: int = 10,
+        self, x, y, width, height, topborder, botborder, speed: int = 5
     ) -> None:
-        self.surface = surface
-        self.rect = rect
-        self.bordertop = bordertop
-        self.borderbottom = borderbottom
+        self.surf = pygame.Surface((width, height))
+        self.surf.fill((255, 255, 255))
+        self.rect = self.surf.get_rect(center=(x, y))
+
+        # border
+        self.topborder = topborder
+        self.botborder = botborder
+
+        # move speed
         self.speed = speed
 
     def movement(self, keypress):
@@ -56,18 +65,26 @@ class Player:
             self.rect.y += self.speed
 
     def collision(self):
-        if self.rect.bottom >= self.borderbottom.top:
-            self.rect.bottom = self.borderbottom.top
-        if self.rect.top <= self.bordertop.bottom:
-            self.rect.top = self.bordertop.bottom
+        if self.rect.bottom >= self.botborder.top:
+            self.rect.bottom = self.botborder.top
+        if self.rect.top <= self.topborder.bottom:
+            self.rect.top = self.topborder.bottom
 
     def update(self, keypress):
         self.movement(keypress)
         self.collision()
 
+    def draw(self, screen):
+        screen.blit(self.surf, self.rect)
 
-l_player = Player(left_player_surf, left_player_rect)
-r_player = Player(right_player_surf, right_player_rect)
+
+environment = Environment(SCREEN_WD, SCREEN_HT)
+l_player = Player(
+    20, SCREEN_HT / 2, 10, 100, environment.top_bor_rect, environment.bot_bor_rect
+)
+r_player = Player(
+    780, SCREEN_HT / 2, 10, 100, environment.top_bor_rect, environment.bot_bor_rect
+)
 
 # set state
 run_state = True
@@ -82,13 +99,17 @@ while run_state:
     l_player.update(keys)
     r_player.update(keys)
 
-    screen.blit(bg_surf, bg_rect)
-    screen.blit(top_bor_surf, top_bor_rect)
-    screen.blit(bottom_bor_surf, bottom_bor_rect)
-    screen.blit(center_line_surf, center_line_rect)
+    environment.draw(screen)
+    l_player.draw(screen)
+    r_player.draw(screen)
 
-    screen.blit(left_player_surf, left_player_rect)
-    screen.blit(right_player_surf, right_player_rect)
+    # screen.blit(bg_surf, bg_rect)
+    # screen.blit(top_bor_surf, top_bor_rect)
+    # screen.blit(bottom_bor_surf, bottom_bor_rect)
+    # screen.blit(center_line_surf, center_line_rect)
+
+    # screen.blit(left_player_surf, left_player_rect)
+    # screen.blit(right_player_surf, right_player_rect)
 
     clock.tick(60)
     pygame.display.update()
