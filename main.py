@@ -212,7 +212,7 @@ class MainMenu:
             center=(self.width // 2, 250)
         )
         self.subtitle_text_surf = self.subtitle_font.render(
-            "Press ANY Key to Start", True, (255, 255, 255)
+            "Press 'W/S' to Start. 'Q' to Exit", True, (255, 255, 255)
         )
         self.subtitle_text_rect = self.subtitle_text_surf.get_rect(
             center=(self.width // 2, 350)
@@ -244,7 +244,7 @@ class GameOver:
             center=(self.width // 2, 250)
         )
         self.subtitle_text_surf = self.subtitle_font.render(
-            "Press ANY Key to Restart", True, (25, 25, 25)
+            "Press 'W/S' Key to Restart. 'Q' to Exit", True, (25, 25, 25)
         )
         self.subtitle_text_rect = self.subtitle_text_surf.get_rect(
             center=(self.width // 2, 350)
@@ -333,11 +333,15 @@ class GameManager:
             if event.type == pygame.KEYDOWN:
                 match self.state:
                     case "menu":
-                        if event.key == pygame.K_SPACE:
+                        if event.key in [pygame.K_s, pygame.K_w]:
                             self.start_game()  # start game here
+                        elif event.key == pygame.K_q:
+                            self.is_running = False
                     case "gameover":
-                        if event.key == pygame.K_SPACE:
+                        if event.key in [pygame.K_s, pygame.K_w]:
                             self.start_game()  # restart game here
+                        elif event.key == pygame.K_q:
+                            self.is_running = False
 
     def start_game(self):
         self.game = Game(self.width, self.height, self.screen)
