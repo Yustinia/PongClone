@@ -5,7 +5,7 @@ pygame.init()
 
 
 class Environment:
-    def __init__(self, width, height) -> None:
+    def __init__(self, width: int, height: int) -> None:
         # screen
         self.width = width
         self.height = height
@@ -150,8 +150,8 @@ class BallObject:
 
     def update(self):
         self.movement()
-        self.is_out_of_bounds()
         self.collision()
+        # self.is_out_of_bounds()
 
     def draw(self, screen):
         screen.blit(self.surface, self.rect)
@@ -192,12 +192,75 @@ class Player:
         screen.blit(self.surf, self.rect)
 
 
-class Game:
-    def __init__(self, width: int = 1280, height: int = 600) -> None:
+class MainMenu:
+    def __init__(self, width: int, height: int) -> None:
         self.width = width
         self.height = height
-        self.screen = pygame.display.set_mode((self.width, self.height))
-        self.clock = pygame.time.Clock()
+
+        # set font
+        self.title_font = pygame.font.Font(None, 100)
+        self.subtitle_font = pygame.font.Font(None, 50)
+
+        # set bg
+        self.bg_surf = pygame.Surface((self.width, self.height))
+        self.bg_rect = self.bg_surf.get_rect(center=(self.width // 2, self.height // 2))
+        self.bg_surf.fill((25, 25, 25))
+
+        # render text
+        self.title_text_surf = self.title_font.render("Welcome!", True, (255, 255, 255))
+        self.title_text_rect = self.title_text_surf.get_rect(
+            center=(self.width // 2, 250)
+        )
+        self.subtitle_text_surf = self.subtitle_font.render(
+            "Press ANY Key to Start", True, (255, 255, 255)
+        )
+        self.subtitle_text_rect = self.subtitle_text_surf.get_rect(
+            center=(self.width // 2, 350)
+        )
+
+    def draw(self, screen):
+        screen.blit(self.bg_surf, self.bg_rect)
+        screen.blit(self.title_text_surf, self.title_text_rect)
+        screen.blit(self.subtitle_text_surf, self.subtitle_text_rect)
+
+
+class GameOver:
+    def __init__(self, width: int, height: int) -> None:
+        self.width = width
+        self.height = height
+
+        # set font
+        self.title_font = pygame.font.Font(None, 100)
+        self.subtitle_font = pygame.font.Font(None, 50)
+
+        # set bg
+        self.bg_surf = pygame.Surface((self.width, self.height))
+        self.bg_rect = self.bg_surf.get_rect(center=(self.width // 2, self.height // 2))
+        self.bg_surf.fill((255, 255, 255))
+
+        # render text
+        self.title_text_surf = self.title_font.render("Game Over!", True, (25, 25, 25))
+        self.title_text_rect = self.title_text_surf.get_rect(
+            center=(self.width // 2, 250)
+        )
+        self.subtitle_text_surf = self.subtitle_font.render(
+            "Press ANY Key to Restart", True, (25, 25, 25)
+        )
+        self.subtitle_text_rect = self.subtitle_text_surf.get_rect(
+            center=(self.width // 2, 350)
+        )
+
+    def draw(self, screen):
+        screen.blit(self.bg_surf, self.bg_rect)
+        screen.blit(self.title_text_surf, self.title_text_rect)
+        screen.blit(self.subtitle_text_surf, self.subtitle_text_rect)
+
+
+class Game:
+    def __init__(self, width: int = 1280, height: int = 600, screen=None) -> None:
+        self.width = width
+        self.height = height
+        self.screen = screen  # pygame.display.set_mode((self.width, self.height))
 
         # initialize game objects
         self.environment = Environment(self.width, self.height)
@@ -228,20 +291,16 @@ class Game:
             self.r_player,
         )
 
-        # run state
-        self.is_running = True
-
-    def event_handler(self):
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                self.is_running = False
-
     def update(self):
         keys = pygame.key.get_pressed()
         self.l_player.update(keys)
         self.r_player.update(keys)
-
         self.ball.update()
+
+        result = self.ball.is_out_of_bounds()
+        if result:
+            return True  # game over
+        return False  # game continue
 
     def draw(self):
         self.environment.draw(self.screen)
@@ -251,6 +310,58 @@ class Game:
 
         self.ball.draw(self.screen)
 
+
+class GameManager:
+    def __init__(self, width: int = 1280, height: int = 600) -> None:
+        self.width = width
+        self.height = height
+        self.screen = pygame.display.set_mode((self.width, self.height))
+        self.clock = pygame.time.Clock()
+
+        self.mainmenu_scr = MainMenu(self.width, self.height)
+        self.gameover_scr = GameOver(self.width, self.height)
+
+        # set state
+        self.state = "menu"
+        self.is_running = True
+
+    def event_handler(self):
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                self.is_running = False
+
+            if event.type == pygame.KEYDOWN:
+                match self.state:
+                    case "menu":
+                        if event.key == pygame.K_SPACE:
+                            self.start_game()  # start game here
+                    case "gameover":
+                        if event.key == pygame.K_SPACE:
+                            self.start_game()  # restart game here
+
+    def start_game(self):
+        self.game = Game(self.width, self.height, self.screen)
+        self.state = "playing"
+
+    def update(self):
+        if self.state == "playing":
+            game_over = self.game.update()
+
+            if game_over:
+                self.gameover_scr = GameOver(self.width, self.height)
+                self.state = "gameover"
+
+    def draw(self):
+        match self.state:
+            case "menu":
+                self.mainmenu_scr.draw(self.screen)
+
+            case "playing":
+                self.game.draw()
+
+            case "gameover":
+                self.gameover_scr.draw(self.screen)
+
         pygame.display.update()
 
     def run(self):
@@ -258,12 +369,11 @@ class Game:
             self.event_handler()
             self.update()
             self.draw()
-
             self.clock.tick(60)
 
         pygame.quit()
 
 
 if __name__ == "__main__":
-    game = Game()
-    game.run()
+    game_man = GameManager()
+    game_man.run()
