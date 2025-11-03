@@ -26,12 +26,12 @@ class Environment:
         self.bot_bor_surf.fill((255, 255, 255))
 
         # left OOB
-        self.left_bor_surf = pygame.Surface((50, self.height))
+        self.left_bor_surf = pygame.Surface((10, self.height))
         self.left_bor_rect = self.left_bor_surf.get_rect(midright=(10, self.height / 2))
         self.left_bor_surf.fill((255, 255, 255))
 
         # right OOB
-        self.right_bor_surf = pygame.Surface((50, self.height))
+        self.right_bor_surf = pygame.Surface((10, self.height))
         self.right_bor_rect = self.right_bor_surf.get_rect(
             midleft=(self.width - 10, self.height / 2)
         )
@@ -138,8 +138,19 @@ class BallObject:
                 random.choice([i for i in range(-8, 8) if abs(i) >= 4]) * self.speed
             )
 
+    def is_out_of_bounds(self) -> bool:
+        borders = {"left": self.leftborder, "right": self.rightborder}
+
+        for side, border in borders.items():
+            if self.rect.colliderect(border):
+                print(f"Collision: {side.title()}")
+                return True
+
+        return False
+
     def update(self):
         self.movement()
+        self.is_out_of_bounds()
         self.collision()
 
     def draw(self, screen):
