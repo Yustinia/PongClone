@@ -107,6 +107,10 @@ class BallObject:
             random.choice([i for i in range(-8, 8) if abs(i) >= 4]) * self.speed
         )
 
+        # hit sound
+        self.hit_sound = pygame.mixer.Sound("sounds/Metal.mp3")
+        self.hit_sound.set_volume(0.5)
+
     def movement(self):
         self.rect.x += self.x_vel
         self.rect.y += self.y_vel
@@ -117,12 +121,14 @@ class BallObject:
             self.y_vel = (
                 random.choice([i for i in range(-8, 8) if abs(i) >= 4]) * self.speed
             )
+            self.hit_sound.play()
 
         if self.rect.bottom >= self.bottomborder.top:
             self.rect.bottom = self.bottomborder.top
             self.y_vel = (
                 random.choice([i for i in range(-8, 8) if abs(i) >= 4]) * self.speed
             )
+            self.hit_sound.play()
 
         # ball collides with left paddle
         if self.rect.colliderect(self.l_player.rect):
@@ -130,6 +136,7 @@ class BallObject:
             self.x_vel = (
                 random.choice([i for i in range(-8, 8) if abs(i) >= 4]) * self.speed
             )
+            self.hit_sound.play()
 
         # ball collides with right paddle
         if self.rect.colliderect(self.r_player.rect):
@@ -137,6 +144,7 @@ class BallObject:
             self.x_vel = (
                 random.choice([i for i in range(-8, 8) if abs(i) >= 4]) * self.speed
             )
+            self.hit_sound.play()
 
     def is_out_of_bounds(self) -> bool:
         borders = {"left": self.leftborder, "right": self.rightborder}
@@ -190,6 +198,24 @@ class Player:
 
     def draw(self, screen):
         screen.blit(self.surf, self.rect)
+
+
+class LeftPlayer(Player):
+    def movement(self, keypress):
+        if keypress[pygame.K_w]:
+            self.rect.y -= self.speed
+
+        if keypress[pygame.K_s]:
+            self.rect.y += self.speed
+
+
+class RightPlayer(Player):
+    def movement(self, keypress):
+        if keypress[pygame.K_UP]:
+            self.rect.y -= self.speed
+
+        if keypress[pygame.K_DOWN]:
+            self.rect.y += self.speed
 
 
 class MainMenu:
@@ -264,7 +290,7 @@ class Game:
 
         # initialize game objects
         self.environment = Environment(self.width, self.height)
-        self.l_player = Player(
+        self.l_player = LeftPlayer(
             20,
             self.height / 2,
             10,
@@ -272,7 +298,7 @@ class Game:
             self.environment.top_bor_rect,
             self.environment.bot_bor_rect,
         )
-        self.r_player = Player(
+        self.r_player = RightPlayer(
             1260,
             self.height / 2,
             10,
